@@ -11,20 +11,19 @@ type UserRepository interface {
 }
 
 type userRepository struct {
-	orderAppMysql *gorm.DB
+	userTable *gorm.DB
 }
 
 func NewUserRepository(
 	orderAppMysql *gorm.DB,
 ) *userRepository {
 	return &userRepository{
-		orderAppMysql: orderAppMysql,
+		userTable: orderAppMysql.Table("users"),
 	}
 }
 
 func (r *userRepository) Insert(request mysql.User) (error) {
-	query := r.orderAppMysql.Table("users")
-	result := query.Create(request)
+	result := r.userTable.Create(request)
 	if result.Error!=nil {
 		return result.Error
 	}
@@ -33,18 +32,11 @@ func (r *userRepository) Insert(request mysql.User) (error) {
 }
 
 func (r *userRepository) Get(username string) (mysql.User, error) {
-	var (
-		request mysql.User
-		response mysql.User
-		err error
-	)
+	var response mysql.User
 
-	request.Username = username
-
-	query := r.orderAppMysql.Table("users")
-	resp := query.First(&response, "username = ?", username)
+	resp := r.userTable.First(&response, "username = ?", username)
 	if resp.Error!=nil {
-		return response, err
+		return response, resp.Error
 	}
 
 	return response, nil

@@ -27,47 +27,45 @@ func NewAuthController(
 }
 
 func (c *authController) GetLogin(ctx *gin.Context) {
+	var (
+		statusCode int
+		err        error
+	)
+
 	username := ctx.Param("username")
 
 	data, err := c.authUsecase.GetLogin(username)
 	if err != nil {
-		statusCode := http.StatusForbidden
+		statusCode = http.StatusForbidden
 		ctx.JSON(statusCode, model.ResponseError(statusCode, err))
 		return
 	}
 
-	result := map[string]interface{}{
-		"data":        data,
-		"status_code": 200,
-	}
-
-	ctx.JSON(http.StatusOK, result)
+	statusCode = http.StatusOK
+	ctx.JSON(statusCode, model.ResponseSuccess(statusCode, data))
 }
 
 func (c *authController) PostLogin(ctx *gin.Context) {
 	var (
-		request dto.Login
-		err error
+		request    dto.Login
+		statusCode int
+		err        error
 	)
 
 	err = ctx.BindJSON(&request)
 	if err != nil {
-		statusCode := http.StatusBadRequest
+		statusCode = http.StatusBadRequest
 		ctx.JSON(statusCode, model.ResponseError(statusCode, err))
 		return
 	}
 
 	data, err := c.authUsecase.PostLogin(request)
 	if err != nil {
-		statusCode := http.StatusForbidden
+		statusCode = http.StatusForbidden
 		ctx.JSON(statusCode, model.ResponseError(statusCode, err))
 		return
 	}
 
-	result := map[string]interface{}{
-		"data":        data,
-		"status_code": http.StatusOK,
-	}
-
-	ctx.JSON(http.StatusOK, result)
+	statusCode = http.StatusOK
+	ctx.JSON(statusCode, model.ResponseSuccess(statusCode, data))
 }

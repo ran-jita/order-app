@@ -13,7 +13,7 @@ import (
 func main() {
 	godotenv.Load()
 
-	order_app_mysql, err := InitMysql()
+	orderAppMysql, err := InitMysql()
 	if err!=nil {
 		fmt.Println("fail connect to mysql")
 		fmt.Println(err)
@@ -26,7 +26,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 		fmt.Printf("Starting Paper Payment Sync HTTP Handler\n")
-		pkg.InitOrderAppHttpHandler(order_app_mysql)
+		pkg.InitOrderAppHttpHandler(orderAppMysql)
 	}()
 
 	wg.Wait()
