@@ -1,13 +1,14 @@
 package repository
 
 import (
+	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	"order-app/pkg/model/mysql"
 )
 
 type UserRepository interface {
 	Get(username string) (mysql.User, error)
-	Insert(request mysql.User) error
+	Insert(request *mysql.User) error
 }
 
 type userRepository struct {
@@ -22,8 +23,10 @@ func NewUserRepository(
 	}
 }
 
-func (r *userRepository) Insert(request mysql.User) (error) {
-	result := r.userTable.Create(request)
+func (r *userRepository) Insert(request *mysql.User) (error) {
+	request.Id = uuid.New().String()
+
+	result := r.userTable.Create(&request)
 	if result.Error!=nil {
 		return result.Error
 	}

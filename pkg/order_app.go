@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
+	"order-app/middleware"
 	"order-app/pkg/controller"
 	"order-app/pkg/repository"
 	"order-app/pkg/usecase"
@@ -12,6 +13,9 @@ import (
 
 func InitOrderAppHttpHandler(orderAppMysql *gorm.DB) {
 	router := gin.Default()
+
+	middleware := middleware.NewMiddleware()
+
 	pingController := controller.NewPingController()
 
 	userRepository := repository.NewUserRepository(orderAppMysql)
@@ -25,13 +29,16 @@ func InitOrderAppHttpHandler(orderAppMysql *gorm.DB) {
 	group := router.Group("/v1")
 	group.GET("/ping", pingController.Ping)
 
+	JwtRoutes := group.Group("")
+	JwtRoutes.Use(middleware.JwtAuth())
+
 	authGroup := group.Group("/auth")
 	{
-		authGroup.GET("/login/:username", authController.GetLogin)
-		authGroup.POST("/login", authController.PostLogin)
+		authGroup.POST("/register", authController.Register)
+		authGroup.POST("/login", authController.Login)
 	}
 
-	customerGroup := group.Group("/customer")
+	customerGroup := JwtRoutes.Group("/customer")
 	{
 		customerGroup.GET("/:customer_id", customerController.GetCustomer)
 		customerGroup.POST("", customerController.InsertCustomer)
