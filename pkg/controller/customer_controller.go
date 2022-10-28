@@ -82,8 +82,8 @@ func (c *customerController) GetAllCustomer(ctx *gin.Context) {
 	statusCode = http.StatusOK
 	ctx.JSON(statusCode, model.ResponseSuccess(statusCode,
 		map[string]interface{}{
-			"customers":      data,
-			"countCustomers": countRecord,
+			"customers":       data,
+			"count_customers": countRecord,
 		},
 	))
 }

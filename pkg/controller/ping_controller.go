@@ -3,6 +3,7 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"order-app/pkg/model"
 )
 
 type PingController interface {
@@ -16,10 +17,10 @@ func NewPingController() *authController {
 }
 
 func (c *authController) Ping(ctx *gin.Context) {
-	result := map[string]interface{}{
-		"message":     "ping",
-		"status_code": 200,
-	}
+	statusCode := http.StatusOK
 
-	ctx.JSON(http.StatusOK, result)
+	ctx.JSON(statusCode, model.ResponseSuccess(
+		statusCode,
+		"ping",
+	))
 }

@@ -3,6 +3,7 @@ package usecase
 import (
 	"errors"
 	"github.com/golang-jwt/jwt/v4"
+	"golang.org/x/crypto/bcrypt"
 	"order-app/middleware"
 
 	"order-app/pkg/model/dto"
@@ -31,27 +32,28 @@ func NewAuthUsecase(
 
 func (u *authUsecase) Login(request dto.LoginRequest) (dto.LoginResponse, error) {
 	var (
-		user mysql.User
+		user     mysql.User
 		response dto.LoginResponse
-		err  error
+		err      error
 	)
 
 	user, err = u.userRepository.Get(request.Username)
 	if err != nil {
-		if(err.Error() == "record not found"){
+		if err.Error() == "record not found" {
 			err = errors.New("User not found")
 			return response, err
 		}
 		return response, err
 	}
 
-	if user.Password != request.Password{
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password))
+	if err!=nil {
 		err = errors.New("Wrong password")
 		return response, err
 	}
 
 	response.Token, err = u.generateToken(user)
-	if err != nil{
+	if err != nil {
 		return response, err
 	}
 
@@ -66,7 +68,7 @@ func (u *authUsecase) Register(request dto.Register) (mysql.User, error) {
 
 	user, err = u.userRepository.Get(request.Username)
 	if err != nil {
-		if(err.Error() != "record not found"){
+		if err.Error() != "record not found" {
 			return user, err
 		}
 	}
@@ -76,8 +78,13 @@ func (u *authUsecase) Register(request dto.Register) (mysql.User, error) {
 		return user, err
 	}
 
+	hashPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), 14)
+	if err != nil {
+		return user, err
+	}
+
 	user.Username = request.Username
-	user.Password = request.Password
+	user.Password = string(hashPassword)
 	user.Name = request.Name
 
 	err = u.userRepository.Insert(&user)
@@ -94,7 +101,7 @@ func (u *authUsecase) generateToken(user mysql.User) (string, error) {
 			Issuer:    os.Getenv("APPLICATION_NAME"),
 			ExpiresAt: time.Now().Add(time.Duration(1) * time.Hour).Unix(),
 		},
-		UserId: user.Id,
+		UserId:   user.Id,
 		Username: user.Username,
 	}
 

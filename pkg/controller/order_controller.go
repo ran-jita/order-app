@@ -83,7 +83,7 @@ func (c *orderController) GetAllOrder(ctx *gin.Context) {
 	ctx.JSON(statusCode, model.ResponseSuccess(statusCode,
 		map[string]interface{}{
 			"orders":      data,
-			"countorders": countRecord,
+			"count_orders": countRecord,
 		},
 	))
 }
