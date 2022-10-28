@@ -13,31 +13,31 @@ import (
 	"order-app/pkg/usecase"
 )
 
-type CustomerController interface {
-	GetCustomer(ctx *gin.Context)
-	GetAllCustomer(ctx *gin.Context)
-	InsertCustomer(ctx *gin.Context)
-	UpdateCustomer(ctx *gin.Context)
-	DeleteCustomer(ctx *gin.Context)
+type OrderController interface {
+	GetOrder(ctx *gin.Context)
+	GetAllOrder(ctx *gin.Context)
+	InsertOrder(ctx *gin.Context)
+	UpdateOrder(ctx *gin.Context)
+	DeleteOrder(ctx *gin.Context)
 }
 
-type customerController struct {
-	customerUsecase usecase.CustomerUsecase
+type orderController struct {
+	orderUsecase usecase.OrderUsecase
 }
 
-func NewCustomerController(
-	customerUsecase usecase.CustomerUsecase,
-) *customerController {
-	return &customerController{
-		customerUsecase: customerUsecase,
+func NewOrderController(
+	orderUsecase usecase.OrderUsecase,
+) *orderController {
+	return &orderController{
+		orderUsecase: orderUsecase,
 	}
 }
 
-func (c *customerController) GetCustomer(ctx *gin.Context) {
+func (c *orderController) GetOrder(ctx *gin.Context) {
 	var statusCode int
-	customerId := ctx.Param("customer_id")
+	orderId := ctx.Param("order_id")
 
-	data, err := c.customerUsecase.GetCustomer(customerId)
+	data, err := c.orderUsecase.GetOrder(orderId)
 	if err != nil {
 		statusCode = http.StatusForbidden
 		ctx.JSON(statusCode, model.ResponseError(statusCode, err))
@@ -48,9 +48,9 @@ func (c *customerController) GetCustomer(ctx *gin.Context) {
 	ctx.JSON(statusCode, model.ResponseSuccess(statusCode, data))
 }
 
-func (c *customerController) GetAllCustomer(ctx *gin.Context) {
+func (c *orderController) GetAllOrder(ctx *gin.Context) {
 	var (
-		request    dto.GetCustomers
+		request    dto.GetOrders
 		statusCode int
 		err        error
 	)
@@ -72,7 +72,7 @@ func (c *customerController) GetAllCustomer(ctx *gin.Context) {
 	userInfoParsed := userInfo.(jwt.MapClaims)
 	request.UserId = fmt.Sprintf("%s", userInfoParsed["UserId"])
 
-	data, countRecord, err := c.customerUsecase.GetAllCustomer(request)
+	data, countRecord, err := c.orderUsecase.GetAllOrder(request)
 	if err != nil {
 		statusCode = http.StatusForbidden
 		ctx.JSON(statusCode, model.ResponseError(statusCode, err))
@@ -82,15 +82,15 @@ func (c *customerController) GetAllCustomer(ctx *gin.Context) {
 	statusCode = http.StatusOK
 	ctx.JSON(statusCode, model.ResponseSuccess(statusCode,
 		map[string]interface{}{
-			"customers":      data,
-			"countCustomers": countRecord,
+			"orders":      data,
+			"countorders": countRecord,
 		},
 	))
 }
 
-func (c *customerController) InsertCustomer(ctx *gin.Context) {
+func (c *orderController) InsertOrder(ctx *gin.Context) {
 	var (
-		request    mysql.Customer
+		request    mysql.Order
 		statusCode int
 		err        error
 	)
@@ -113,7 +113,7 @@ func (c *customerController) InsertCustomer(ctx *gin.Context) {
 	userInfoParsed := userInfo.(jwt.MapClaims)
 	request.UserId = fmt.Sprintf("%s", userInfoParsed["UserId"])
 
-	data, err := c.customerUsecase.InsertCustomer(request)
+	data, err := c.orderUsecase.InsertOrder(request)
 	if err != nil {
 		statusCode = http.StatusForbidden
 		ctx.JSON(statusCode, model.ResponseError(statusCode, err))
@@ -124,9 +124,9 @@ func (c *customerController) InsertCustomer(ctx *gin.Context) {
 	ctx.JSON(statusCode, model.ResponseSuccess(statusCode, data))
 }
 
-func (c *customerController) UpdateCustomer(ctx *gin.Context) {
+func (c *orderController) UpdateOrder(ctx *gin.Context) {
 	var (
-		request    mysql.Customer
+		request    mysql.Order
 		statusCode int
 		err        error
 	)
@@ -138,16 +138,16 @@ func (c *customerController) UpdateCustomer(ctx *gin.Context) {
 		return
 	}
 
-	request.Id = ctx.Param("customer_id")
+	request.Id = ctx.Param("order_id")
 	if request.Id == "" {
-		err = errors.New("undefined customer_id")
+		err = errors.New("undefined order_id")
 		statusCode = http.StatusBadRequest
 
 		ctx.JSON(statusCode, model.ResponseError(statusCode, err))
 		return
 	}
 
-	data, err := c.customerUsecase.UpdateCustomer(request)
+	data, err := c.orderUsecase.UpdateOrder(request)
 	if err != nil {
 		statusCode = http.StatusForbidden
 		ctx.JSON(statusCode, model.ResponseError(statusCode, err))
@@ -158,15 +158,15 @@ func (c *customerController) UpdateCustomer(ctx *gin.Context) {
 	ctx.JSON(statusCode, model.ResponseSuccess(statusCode, data))
 }
 
-func (c *customerController) DeleteCustomer(ctx *gin.Context) {
+func (c *orderController) DeleteOrder(ctx *gin.Context) {
 	var (
 		statusCode int
 		err        error
 	)
 
-	customerId := ctx.Param("customer_id")
-	if customerId == "" {
-		err = errors.New("undefined customer_id")
+	orderId := ctx.Param("order_id")
+	if orderId == "" {
+		err = errors.New("undefined order_id")
 		statusCode = http.StatusBadRequest
 
 		ctx.JSON(statusCode, model.ResponseError(statusCode, err))
@@ -174,7 +174,7 @@ func (c *customerController) DeleteCustomer(ctx *gin.Context) {
 
 	}
 
-	err = c.customerUsecase.DeleteCustomer(customerId)
+	err = c.orderUsecase.DeleteOrder(orderId)
 	if err != nil {
 		statusCode = http.StatusForbidden
 		ctx.JSON(statusCode, model.ResponseError(statusCode, err))

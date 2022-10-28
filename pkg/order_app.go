@@ -26,6 +26,10 @@ func InitOrderAppHttpHandler(orderAppMysql *gorm.DB) {
 	customerUsecase := usecase.NewCustomerUsecase(customerRepository)
 	customerController := controller.NewCustomerController(customerUsecase)
 
+	orderRepository := repository.NewOrderRepository(orderAppMysql)
+	orderUsecase := usecase.NewOrderUsecase(customerUsecase, orderRepository)
+	orderController := controller.NewOrderController(orderUsecase)
+
 	group := router.Group("/v1")
 	group.GET("/ping", pingController.Ping)
 
@@ -45,6 +49,15 @@ func InitOrderAppHttpHandler(orderAppMysql *gorm.DB) {
 		customerGroup.POST("", customerController.InsertCustomer)
 		customerGroup.PUT("/:customer_id", customerController.UpdateCustomer)
 		customerGroup.DELETE("/:customer_id", customerController.DeleteCustomer)
+	}
+
+	orderGroup := JwtRoutes.Group("/order")
+	{
+		orderGroup.GET("/:order_id", orderController.GetOrder)
+		orderGroup.POST("/all", orderController.GetAllOrder) // search with pagination
+		orderGroup.POST("", orderController.InsertOrder)
+		orderGroup.PUT("/:order_id", orderController.UpdateOrder)
+		orderGroup.DELETE("/:order_id", orderController.DeleteOrder)
 	}
 
 	serverString := fmt.Sprintf("%s:%s",

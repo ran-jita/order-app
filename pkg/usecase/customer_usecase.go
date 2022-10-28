@@ -10,7 +10,7 @@ import (
 type CustomerUsecase interface {
 	GetCustomer(customerId string) (mysql.Customer, error)
 	GetAllCustomer(request dto.GetCustomers) ([]mysql.Customer, int64, error)
-	InsetCustomer(request mysql.Customer) (mysql.Customer, error)
+	InsertCustomer(request mysql.Customer) (mysql.Customer, error)
 	UpdateCustomer(request mysql.Customer) (mysql.Customer, error)
 	DeleteCustomer(customerId string) error
 }
@@ -62,7 +62,7 @@ func (u *customerUsecase) GetAllCustomer(request dto.GetCustomers) ([]mysql.Cust
 	return customers, countRecord, nil
 }
 
-func (u *customerUsecase) InsetCustomer(request mysql.Customer) (mysql.Customer, error) {
+func (u *customerUsecase) InsertCustomer(request mysql.Customer) (mysql.Customer, error) {
 	var (
 		err error
 	)
@@ -82,16 +82,13 @@ func (u *customerUsecase) InsetCustomer(request mysql.Customer) (mysql.Customer,
 
 func (u *customerUsecase) UpdateCustomer(request mysql.Customer) (mysql.Customer, error) {
 	var (
-		validate mysql.Customer
 		err      error
 	)
 
-	validate, err = u.GetCustomer(request.Id)
+	_, err = u.GetCustomer(request.Id)
 	if err != nil {
 		return request, err
 	}
-
-	validate.Name = request.Name
 
 	err = u.customerRepository.Update(&request)
 	if err != nil {
