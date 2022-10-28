@@ -2,12 +2,14 @@ package usecase
 
 import (
 	"errors"
+	"order-app/pkg/model/dto"
 	"order-app/pkg/model/mysql"
 	"order-app/pkg/repository"
 )
 
 type CustomerUsecase interface {
 	GetCustomer(customerId string) (mysql.Customer, error)
+	GetAllCustomer(request dto.GetCustomers) ([]mysql.Customer, int64, error)
 	InsetCustomer(request mysql.Customer) (mysql.Customer, error)
 	UpdateCustomer(request mysql.Customer) (mysql.Customer, error)
 	DeleteCustomer(customerId string) error
@@ -41,6 +43,23 @@ func (u *customerUsecase) GetCustomer(customerId string) (mysql.Customer, error)
 	}
 
 	return customer, nil
+}
+
+func (u *customerUsecase) GetAllCustomer(request dto.GetCustomers) ([]mysql.Customer, int64, error) {
+	var (
+		customers   []mysql.Customer
+		countRecord int64
+		err         error
+	)
+
+	customers, countRecord, err = u.customerRepository.All(request)
+	if err != nil {
+		if err.Error() != "record not found" {
+			return customers, countRecord, err
+		}
+	}
+
+	return customers, countRecord, nil
 }
 
 func (u *customerUsecase) InsetCustomer(request mysql.Customer) (mysql.Customer, error) {

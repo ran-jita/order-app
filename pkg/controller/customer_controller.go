@@ -2,8 +2,11 @@ package controller
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 	"net/http"
+	"order-app/pkg/model/dto"
 	"order-app/pkg/model/mysql"
 
 	"order-app/pkg/model"
@@ -12,6 +15,7 @@ import (
 
 type CustomerController interface {
 	GetCustomer(ctx *gin.Context)
+	GetAllCustomer(ctx *gin.Context)
 	InsertCustomer(ctx *gin.Context)
 	UpdateCustomer(ctx *gin.Context)
 	DeleteCustomer(ctx *gin.Context)
@@ -30,21 +34,58 @@ func NewCustomerController(
 }
 
 func (c *customerController) GetCustomer(ctx *gin.Context) {
+	var statusCode int
 	customerId := ctx.Param("customer_id")
 
 	data, err := c.customerUsecase.GetCustomer(customerId)
 	if err != nil {
-		statusCode := http.StatusForbidden
+		statusCode = http.StatusForbidden
 		ctx.JSON(statusCode, model.ResponseError(statusCode, err))
 		return
 	}
 
-	result := map[string]interface{}{
-		"data":        data,
-		"status_code": 200,
+	statusCode = http.StatusOK
+	ctx.JSON(statusCode, model.ResponseSuccess(statusCode, data))
+}
+
+func (c *customerController) GetAllCustomer(ctx *gin.Context) {
+	var (
+		request    dto.GetCustomers
+		statusCode int
+		err        error
+	)
+
+	err = ctx.BindJSON(&request)
+	if err != nil {
+		statusCode = http.StatusBadRequest
+		ctx.JSON(statusCode, model.ResponseError(statusCode, err))
+		return
 	}
 
-	ctx.JSON(http.StatusOK, result)
+	userInfo, exist := ctx.Get("userInfo")
+	if !exist {
+		err = errors.New("Unauthorized")
+		statusCode = http.StatusUnauthorized
+		ctx.JSON(statusCode, model.ResponseError(statusCode, err))
+		return
+	}
+	userInfoParsed := userInfo.(jwt.MapClaims)
+	request.UserId = fmt.Sprintf("%s", userInfoParsed["UserId"])
+
+	data, countRecord, err := c.customerUsecase.GetAllCustomer(request)
+	if err != nil {
+		statusCode = http.StatusForbidden
+		ctx.JSON(statusCode, model.ResponseError(statusCode, err))
+		return
+	}
+
+	statusCode = http.StatusOK
+	ctx.JSON(statusCode, model.ResponseSuccess(statusCode,
+		map[string]interface{}{
+			"customers":      data,
+			"countCustomers": countRecord,
+		},
+	))
 }
 
 func (c *customerController) InsertCustomer(ctx *gin.Context) {
@@ -60,6 +101,17 @@ func (c *customerController) InsertCustomer(ctx *gin.Context) {
 		ctx.JSON(statusCode, model.ResponseError(statusCode, err))
 		return
 	}
+
+	userInfo, exist := ctx.Get("userInfo")
+	if !exist {
+		err = errors.New("Unauthorized")
+		statusCode = http.StatusUnauthorized
+		ctx.JSON(statusCode, model.ResponseError(statusCode, err))
+		return
+	}
+
+	userInfoParsed := userInfo.(jwt.MapClaims)
+	request.UserId = fmt.Sprintf("%s", userInfoParsed["UserId"])
 
 	data, err := c.customerUsecase.InsetCustomer(request)
 	if err != nil {
@@ -93,7 +145,6 @@ func (c *customerController) UpdateCustomer(ctx *gin.Context) {
 
 		ctx.JSON(statusCode, model.ResponseError(statusCode, err))
 		return
-
 	}
 
 	data, err := c.customerUsecase.UpdateCustomer(request)

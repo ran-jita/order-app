@@ -41,6 +41,7 @@ func InitOrderAppHttpHandler(orderAppMysql *gorm.DB) {
 	customerGroup := JwtRoutes.Group("/customer")
 	{
 		customerGroup.GET("/:customer_id", customerController.GetCustomer)
+		customerGroup.POST("/all", customerController.GetAllCustomer) // search with pagination
 		customerGroup.POST("", customerController.InsertCustomer)
 		customerGroup.PUT("/:customer_id", customerController.UpdateCustomer)
 		customerGroup.DELETE("/:customer_id", customerController.DeleteCustomer)

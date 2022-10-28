@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
+	"order-app/pkg/model/dto"
 	"order-app/pkg/model/mysql"
 	"time"
 )
 
 type CustomerRepository interface {
 	Get(customerId string) (mysql.Customer, error)
+	All(request dto.GetCustomers) ([]mysql.Customer, int64, error)
 	Insert(request *mysql.Customer) error
 	Update(request *mysql.Customer) error
 	Delete(customerId string) error
@@ -38,6 +40,31 @@ func (r *customerRepository) Get(customerId string) (mysql.Customer, error) {
 	}
 
 	return response, nil
+}
+
+func (r *customerRepository) All(request dto.GetCustomers) ([]mysql.Customer, int64, error) {
+	var (
+		response    []mysql.Customer
+	)
+
+	query := r.customerTable.Where("user_id = ?", request.UserId)
+
+	if(request.Name != ""){
+		query = query.Where("name LIKE ?", "%"+request.Name+"%")
+	}
+
+	query = query.Order(request.SortField+" "+request.SortOrder)
+	responseAll := query.Find(&response)
+	if responseAll.Error != nil {
+		return response, 0, responseAll.Error
+	}
+
+	responseSelected := query.Offset(request.First).Limit(request.Rows).Find(&response)
+	if responseSelected.Error != nil {
+		return response, 0, responseSelected.Error
+	}
+
+	return response, responseAll.RowsAffected, nil
 }
 
 func (r *customerRepository) Insert(request *mysql.Customer) error {
