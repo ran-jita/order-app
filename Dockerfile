@@ -34,7 +34,7 @@ RUN apk update --no-cache && \
     apk add --no-cache -U tzdata && \
     cp /usr/share/zoneinfo/Asia/Jakarta /etc/localtime && \
     # Set permission
-    chmod +x /src/app/paper-payment && \
+    chmod +x /src/order-app && \
     # remove unused files
     rm -rf Dockerfile \
     dockerfile \
